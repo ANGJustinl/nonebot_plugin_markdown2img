@@ -1,27 +1,25 @@
 [project]
-name = "nonebot-plugin-template"
-version = "0.1.0"
-description = "插件描述"
+name = "nonebot_plugin_markdown2img"
+version = "0.0.1"
+description = "可作为函数调用的Markdown渲染图片插件"
 readme = "README.md"
-authors = [{ name = "owner", email = "owner@gmail.com" }]
+authors = [{ name = "ANGJustinl", email = "angjustinl@gmail.com" }]
 requires-python = ">=3.10"
 dependencies = [
   "nonebot2>=2.4.3,<3.0.0",
-
-  "nonebot-plugin-localstore>=0.7.4,<1.0.0",  # 存储文件
-  "nonebot-plugin-apscheduler>=0.5.0,<1.0.0", # 定时任务
-
-  "nonebot-plugin-uninfo>=0.9.0,<1.0.0",   # 多平台用户信息获取
-  "nonebot-plugin-alconna>=0.59.4,<1.0.0", # 跨平台命令解析拓展
-  # "nonebot-adapter-onebot>=2.4.6,<3.0.0"
-
-  "httpx>=0.27.0,<1.0.0",
+  "nonebot-adapter-onebot>=2.4.6,<3.0.0",
+  "markdown-it-py>=4.0.0",
+  "mdit-py-plugins>=0.5.0",
+  "html2image>=2.0.7",
+  "pygments>=2.19.2",
+  "linkify-it-py>=2.0.3",
+  "pillow>=12.0.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/owner/nonebot-plugin-template"
-Repository = "https://github.com/owner/nonebot-plugin-template.git"
-Issues = "https://github.com/owner/nonebot-plugin-template/issues"
+Homepage = "https://github.com/ANGJustinl/nonebot_plugin_markdown2img"
+Repository = "https://github.com/ANGJustinl/nonebot_plugin_markdown2img.git"
+Issues = "https://github.com/ANGJustinl/nonebot_plugin_markdown2img/issues"
 
 
 [dependency-groups]
@@ -48,7 +46,7 @@ required-version = ">=0.8.14"
 default-groups = ["test", "dev"]
 
 [tool.nonebot]
-plugins = ["nonebot_plugin_template"]
+plugins = ["nonebot_plugin_markdown2img"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -94,7 +92,6 @@ select = [
   "ASYNC", # flake8-async
   "C4",    # flake8-comprehensions
   "T10",   # flake8-debugger
-  "T20",   # flake8-print
   "PYI",   # flake8-pyi
   "PT",    # flake8-pytest-style
   "Q",     # flake8-quotes
@@ -110,6 +107,7 @@ ignore = [
   "RUF003", # ambiguous-unicode-character-comment
   "W191",   # indentation contains tabs
   "TID252", # relative import
+  "T201",   # print found
 ]
 
 
