@@ -25,6 +25,26 @@ _✨ 可作为函数调用的Markdown渲染图片插件 ✨_
 
 可作为函数调用的Markdown渲染图片插件
 
+### 直接作为插件使用
+
+安装并配置好插件后，无需额外导入函数，直接在群聊中发送指令即可使用。例如：
+
+发送 `md2img # 标题\n\n这是一段**粗体**文本。`，即可收到渲染后的图片。
+
+### 作为函数调用
+你可以直接导入并使用渲染函数：
+
+```python
+from nonebot_plugin_markdown2img.renderer import render_markdown_to_base64
+# or
+# from src.nonebot_plugin_markdown2img.renderer import render_markdown_to_base64
+
+# 渲染Markdown文本为base64图片
+markdown_text = "# 标题\n\n这是一段**粗体**文本。"
+base64_image = render_markdown_to_base64(markdown_text)
+```
+
+
 ## 💿 安装
 
 <details open>
@@ -80,5 +100,9 @@ _✨ 可作为函数调用的Markdown渲染图片插件 ✨_
 | 指令 | 权限 | 需要@ | 范围 | 说明 |
 |:-----:|:----:|:----:|:----:|:----:|
 | md2img | 群员 | 否 | 群聊 | `md2img` + 想要生成图片的markdown文本 |
+
 ### 效果图
 ![test_markdown_output](test_markdown_output.png)
+
+## 🙏 特别感谢
+感谢 [nonebot_plugin_easymarkdown](https://github.com/phquathi/nonebot_plugin_easymarkdown) 项目提供的灵感和参考。
