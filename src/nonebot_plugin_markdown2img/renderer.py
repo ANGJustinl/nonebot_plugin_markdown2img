@@ -17,13 +17,16 @@ from nonebot.log import logger
 
 try:
     from .config import Config
+
     plugin_config: Config = get_plugin_config(Config)
 except Exception:
+
     class Config:
         font_path: str | None = None
         disable_gpu: bool | None = True
         disable_linkify: bool | None = True
         pass
+
     plugin_config = Config()
 
 # 临时文件路径
@@ -68,7 +71,7 @@ def markdown_to_html(md_text: str, font_path: Path | None = None) -> str:
 
     # 2. 初始化 Markdown 解析器
     md = (
-        markdown_it.MarkdownIt("gfm-like", {"highlight": highlight_code,  "linkify": not disable_linkify})
+        markdown_it.MarkdownIt("gfm-like", {"highlight": highlight_code, "linkify": not disable_linkify})
         .use(footnote_plugin)
         .use(tasklists_plugin)
         .use(texmath_plugin, delimiters="dollars")
@@ -79,12 +82,12 @@ def markdown_to_html(md_text: str, font_path: Path | None = None) -> str:
 
     # 3. 处理字体
     font_face_css = ""
-    font_family_name = "STSong-Light, 'SimSun', serif" # 默认回退字体
+    font_family_name = "STSong-Light, 'SimSun', serif"  # 默认回退字体
 
     if font_path and font_path.exists():
         # 为字体文件创建本地 URL (file:///...)
         font_url = font_path.as_uri()
-        font_family_name = "CustomFont" # 使用自定义字体
+        font_family_name = "CustomFont"  # 使用自定义字体
 
         font_face_css = f"""
         @font-face {{
@@ -189,8 +192,8 @@ def markdown_to_html(md_text: str, font_path: Path | None = None) -> str:
 def render_markdown_to_image_bytes(
     markdown_text: str,
     font_path: Path | None = None,
-    canvas_width: int = 800, # 调整了默认宽度
-    zoom: float = 2.0, # 2.0 对应 2x 缩放 (视网膜屏), 3.0 可能太大了
+    canvas_width: int = 800,  # 调整了默认宽度
+    zoom: float = 2.0,  # 2.0 对应 2x 缩放 (视网膜屏), 3.0 可能太大了
 ) -> bytes:
     """
     将 Markdown 文本渲染为 PNG 图片并返回字节数据。
@@ -252,7 +255,7 @@ def render_markdown_to_image_bytes(
                     "--disable-features=VizDisplayCompositor",
                     "--disable-background-timer-throttling",
                     "--disable-backgrounding-occluded-windows",
-                    "--disable-renderer-backgrounding"
+                    "--disable-renderer-backgrounding",
                 ]
 
                 for flag in disable_flags:
@@ -301,9 +304,7 @@ def render_markdown_to_image_bytes(
                     alpha_bbox = probe.getchannel("A").getbbox()
                 else:
                     bg_color = probe.getpixel((0, 0))
-                    diff = ImageChops.difference(
-                        probe, Image.new(probe.mode, probe.size, bg_color)
-                    )
+                    diff = ImageChops.difference(probe, Image.new(probe.mode, probe.size, bg_color))
                     alpha_bbox = diff.getbbox()
 
                 final_bbox = alpha_bbox
@@ -343,11 +344,7 @@ def render_markdown_to_image_bytes(
                     max(1, int(img.height * post_scale_factor)),
                 )
                 if target_size != img.size:
-                    resample_filter = (
-                        Image.Resampling.LANCZOS
-                        if hasattr(Image, "Resampling")
-                        else Image.LANCZOS
-                    )
+                    resample_filter = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS
                     img = img.resize(target_size, resample_filter)
 
             buffer = io.BytesIO()
@@ -363,20 +360,12 @@ def render_markdown_to_image_bytes(
 
 
 def render_markdown_to_base64(
-    markdown_text: str,
-    font_path: Path | None = DEFAULT_FONT_PATH,
-    canvas_width: int = 800,
-    zoom: float = 2.0
+    markdown_text: str, font_path: Path | None = DEFAULT_FONT_PATH, canvas_width: int = 800, zoom: float = 2.0
 ) -> str:
     """
     渲染 Markdown 并返回 base64 格式，便于直接发送图片消息。
     """
-    byte_data = render_markdown_to_image_bytes(
-        markdown_text,
-        font_path,
-        canvas_width,
-        zoom
-    )
+    byte_data = render_markdown_to_image_bytes(markdown_text, font_path, canvas_width, zoom)
     return "base64://" + base64.b64encode(byte_data).decode("utf-8")
 
 
@@ -384,7 +373,7 @@ def clean_up():
     """
     清理所有遗留的临时截图文件
     """
-    for file_path in TEMP_DIR.glob("temp_*.png"): # 改为清理 png
+    for file_path in TEMP_DIR.glob("temp_*.png"):  # 改为清理 png
         if file_path.exists():
             try:
                 file_path.unlink()
@@ -479,5 +468,5 @@ def hello_world():
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")
         import traceback
-        traceback.print_exc()
 
+        traceback.print_exc()
