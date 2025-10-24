@@ -25,6 +25,9 @@ _✨ 可作为函数调用的Markdown渲染图片插件 ✨_
 
 可作为函数调用的Markdown渲染图片插件
 
+> **注意**  
+> 若你的Markdown中嵌入了图片，可能会极大增加渲染时间，请耐心等待！
+
 ### 直接作为插件使用
 
 安装并配置好插件后，无需额外导入函数，直接在群聊中发送指令即可使用。例如：
@@ -47,7 +50,8 @@ base64_image = render_markdown_to_base64(markdown_text)
 
 ## 💿 安装
 
-> 若遇到缺少`Markdown渲染图片失败，原因:Linkify enabled but not installed.. 请检查日志。`报错,  请额外安装`linkify-it-py`!
+> **注意**  
+> 若遇到缺少`Markdown渲染图片失败，原因:Linkify enabled but not installed.. 请检查日志。`报错,  请额外安装`linkify-it-py`或在`.env`文件中配置`LINKIFY_ENABLED=false`来禁用Linkify功能。
 
 <details open>
 <summary>使用 nb-cli 安装</summary>
@@ -98,7 +102,7 @@ base64_image = render_markdown_to_base64(markdown_text)
 | disable_gpu | 否 | True | 是否禁用GPU |
 | disable_linkify | 否 | True | 是否禁用Linkify |
 | browser | 否 | "chrome" | 指定使用的浏览器类型, 可选值有 "chrome", "edge", "firefox" 等 |
-| browser_executable | 否 | None | 指定浏览器可执行文件的路径(Windows比较常见的有 C:\Program Files (x86)\Microsoft\Edge\Application) | 
+| browser_executable | 否 | None | 指定浏览器可执行文件的路径 (Windows比较常见的有 C:\Program Files (x86)\Microsoft\Edge\Application) |
 
 ## 🎉 使用
 ### 指令表

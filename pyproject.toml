@@ -1,6 +1,6 @@
 [project]
 name = "nonebot_plugin_markdown2img"
-version = "0.0.3-rc1"
+version = "0.0.3"
 description = "可作为函数调用的Markdown渲染图片插件"
 readme = "README.md"
 authors = [{ name = "ANGJustinl", email = "angjustinl@gmail.com" }]
