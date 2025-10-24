@@ -1,7 +1,9 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
 class Config(BaseModel):
-    font_path: str | None = None
-    disable_gpu: bool | None = True
+    font_path: Optional[str] = None
+    disable_gpu: Optional[bool] = True
+    disable_linkify: Optional[bool] = True
     pass
