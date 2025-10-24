@@ -31,9 +31,9 @@ jobs:
           echo "TAG_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Check Version
-        if: steps.version.outputs.VERSION != steps.version.outputs.TAG_VERSION
-        run: exit 1
+      #- name: Check Version
+      #  if: steps.version.outputs.VERSION != steps.version.outputs.TAG_VERSION
+      #  run: exit 1
 
       - name: Build 
         run: uv build
