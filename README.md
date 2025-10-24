@@ -47,6 +47,8 @@ base64_image = render_markdown_to_base64(markdown_text)
 
 ## 💿 安装
 
+> 若遇到缺少`Markdown渲染图片失败，原因:Linkify enabled but not installed.. 请检查日志。`报错,  请额外安装`linkify-it-py`!
+
 <details open>
 <summary>使用 nb-cli 安装</summary>
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
