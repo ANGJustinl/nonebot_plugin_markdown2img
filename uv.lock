@@ -647,7 +647,7 @@ wheels = [
 
 [[package]]
 name = "nonebot-plugin-markdown2img"
-version = "0.0.2"
+version = "0.0.3rc1"
 source = { editable = "." }
 dependencies = [
     { name = "html2image" },

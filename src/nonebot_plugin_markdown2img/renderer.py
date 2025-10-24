@@ -25,6 +25,8 @@ except Exception:
         font_path: str | None = None
         disable_gpu: bool | None = True
         disable_linkify: bool | None = True
+        browser: str | None = "chrome"
+        browser_executable: str | None = None
         pass
 
     plugin_config = Config()
@@ -217,7 +219,11 @@ def render_markdown_to_image_bytes(
         html = markdown_to_html(markdown_text, font_path)
 
         # 2. 初始化 html2image
-        hti_kwargs = {"output_path": str(TEMP_DIR)}
+        hti_kwargs = {
+            "output_path": str(TEMP_DIR),
+            "browser": plugin_config.browser,
+            "browser_executable": plugin_config.browser_executable,
+        }
         post_scale_factor = 1.0
 
         try:
