@@ -101,8 +101,6 @@ base64_image = render_markdown_to_base64(markdown_text)
 | font_path | 否 | 无 | 字体文件路径 |
 | disable_gpu | 否 | True | 是否禁用GPU |
 | disable_linkify | 否 | True | 是否禁用Linkify |
-| browser | 否 | "chrome" | 指定使用的浏览器类型, 可选值有 "chrome", "edge", "firefox" 等 |
-| browser_executable | 否 | None | 指定浏览器可执行文件的路径 (Windows比较常见的有 C:\Program Files (x86)\Microsoft\Edge\Application) |
 
 ## 🎉 使用
 ### 指令表
