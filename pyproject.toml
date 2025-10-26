@@ -1,6 +1,6 @@
 [project]
 name = "nonebot_plugin_markdown2img"
-version = "0.0.4"
+version = "0.0.5"
 description = "可作为函数调用的Markdown渲染图片插件"
 readme = "README.md"
 authors = [{ name = "ANGJustinl", email = "angjustinl@gmail.com" }]
@@ -14,6 +14,7 @@ dependencies = [
   "pygments>=2.19.2",
   "linkify-it-py>=2.0.3",
   "pillow>=12.0.0",
+  "httpx>=0.28.1",
 ]
 
 [project.urls]

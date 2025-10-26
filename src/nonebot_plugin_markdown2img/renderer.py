@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import inspect
 import io
 import os
 from pathlib import Path
+import re
 import tempfile
 
 from html2image import Html2Image
+import httpx
 import markdown_it
 from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.tasklists import tasklists_plugin
@@ -33,7 +36,11 @@ except Exception:
 TEMP_DIR = Path(tempfile.gettempdir()) / "markdown_renderer"
 TEMP_DIR.mkdir(exist_ok=True)
 
-DEFAULT_FONT_PATH = plugin_config.markdown2img_font_path
+# 图片缓存目录
+IMAGE_CACHE_DIR = TEMP_DIR / "image_cache"
+IMAGE_CACHE_DIR.mkdir(exist_ok=True)
+
+DEFAULT_FONT_PATH = Path(plugin_config.markdown2img_font_path) if plugin_config.markdown2img_font_path else None
 disable_gpu = plugin_config.markdown2img_disable_gpu
 disable_linkify = plugin_config.markdown2img_disable_linkify
 
@@ -44,6 +51,109 @@ else:
 
 if disable_linkify is True:
     logger.warning("Markdown2Img: 链接自动识别已禁用。")
+
+
+def download_and_cache_image(url: str) -> str:
+    """
+    下载图片并缓存到本地，返回本地文件URI
+
+    Args:
+        url: 图片URL
+
+    Returns:
+        本地文件URI (file://...)
+    """
+    # 检查URL格式，确保有协议前缀
+    if not url.startswith(("http://", "https://")):
+        logger.warning(f"图片URL缺少协议前缀: {url}")
+        return url  # 返回原始URL，让浏览器处理
+
+    # 创建URL的哈希值作为文件名
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    file_ext = url.split(".")[-1] if "." in url.split("/")[-1] else "jpg"
+    cache_file = IMAGE_CACHE_DIR / f"{url_hash}.{file_ext}"
+
+    # 如果文件已存在，直接返回
+    if cache_file.exists():
+        logger.info(f"使用缓存的图片: {url}")
+        return cache_file.as_uri()
+
+    try:
+        # 使用httpx下载图片，添加更多配置
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"  # noqa
+        }
+
+        # 使用同步方式下载，避免异步问题
+        with httpx.Client(
+            timeout=5.0,  # 减少超时时间
+            follow_redirects=True,
+            headers=headers,
+            verify=False,  # 禁用SSL证书验证
+        ) as client:
+            response = client.get(url)
+            response.raise_for_status()
+
+            # 保存到缓存
+            with open(cache_file, "wb") as f:
+                f.write(response.content)
+
+            logger.info(f"图片已缓存: {url} -> {cache_file}")
+            return cache_file.as_uri()
+
+    except Exception as e:
+        logger.error(f"下载图片失败: {url}, 错误: {e}")
+        # 返回原始URL，让浏览器尝试加载
+        return url
+
+
+def process_images_in_html(html_content: str) -> str:
+    """
+    处理HTML中的图片链接，下载并缓存图片
+
+    Args:
+        html_content: HTML内容
+
+    Returns:
+        处理后的HTML内容
+    """
+    # 匹配HTML img标签中的src属性
+    img_pattern = r'<img[^>]+src="([^"]+)"[^>]*>'
+
+    # 找到所有图片URL
+    img_urls = []
+    for match in re.finditer(img_pattern, html_content):
+        src_url = match.group(1)
+        if src_url.startswith("https://"):
+            img_urls.append((match.group(0), src_url))
+
+    # 如果没有HTTPS图片，直接返回
+    if not img_urls:
+        return html_content
+
+    logger.warning(f"检测到 {len(img_urls)} 个 HTTPS 图片链接，正在缓存以避免SSL问题。")
+
+    # 简化处理：只下载前3张图片，避免阻塞
+    max_images = 3
+    limited_img_urls = img_urls[:max_images]
+
+    # 同步下载图片，避免异步问题
+    local_uris = []
+    for _, src_url in limited_img_urls:
+        try:
+            local_uri = download_and_cache_image(src_url)
+            local_uris.append(local_uri)
+        except Exception as e:
+            logger.error(f"处理图片失败: {src_url}, 错误: {e}")
+            local_uris.append(src_url)  # 使用原始URL
+
+    # 替换HTML中的图片URL
+    processed_html = html_content
+    for i, (img_tag, src_url) in enumerate(limited_img_urls):
+        local_uri = local_uris[i]
+        processed_html = processed_html.replace(img_tag, img_tag.replace(src_url, local_uri))
+
+    return processed_html
 
 
 def markdown_to_html(md_text: str, font_path: Path | None = None) -> str:
@@ -85,8 +195,9 @@ def markdown_to_html(md_text: str, font_path: Path | None = None) -> str:
     font_family_name = "STSong-Light, 'SimSun', serif"  # 默认回退字体
 
     if font_path and font_path.exists():
-        # 为字体文件创建本地 URL (file:///...)
-        font_url = font_path.as_uri()
+        # 确保路径是绝对路径，然后创建本地 URL (file:///...)
+        absolute_font_path = font_path.resolve()
+        font_url = absolute_font_path.as_uri()
         font_family_name = "CustomFont"  # 使用自定义字体
 
         font_face_css = f"""
@@ -98,6 +209,9 @@ def markdown_to_html(md_text: str, font_path: Path | None = None) -> str:
 
     # 4. 组装 HTML
     html_fragment = md.render(md_text)
+
+    # 5. 处理图片缓存
+    html_fragment = process_images_in_html(html_fragment)
 
     html = f"""
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -216,6 +330,10 @@ def render_markdown_to_image_bytes(
         # 1. 转换为 HTML, 注入字体
         html = markdown_to_html(markdown_text, font_path)
 
+        # 检查Markdown文本中是否包含HTTPS图片链接
+        if "https://" in markdown_text and "![](" in markdown_text:
+            logger.warning("Markdown文本中包含HTTPS图片链接，正在缓存图片以避免SSL问题")
+
         # 2. 初始化 html2image
         hti_kwargs = {
             "output_path": str(TEMP_DIR),
@@ -234,11 +352,52 @@ def render_markdown_to_image_bytes(
                 # Fallback for html2image versions without device_scale_factor support.
                 post_scale_factor = zoom
 
+        # 尝试在初始化时设置浏览器标志
+        browser_flags = [
+            "--disable-gpu",
+            "--disable-gpu-sandbox",
+            "--disable-software-rasterizer",
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+            "--disable-web-security",
+            "--disable-features=VizDisplayCompositor",
+            "--disable-background-timer-throttling",
+            "--disable-backgrounding-occluded-windows",
+            "--disable-renderer-backgrounding",
+            # 添加SSL相关标志以处理HTTPS图片加载问题
+            "--ignore-certificate-errors",
+            "--ignore-ssl-errors",
+            "--ignore-certificate-errors-spki-list",
+            "--allow-running-insecure-content",
+            "--disable-extensions",
+            "--disable-webgl",
+            "--disable-gl-drawing-for-tests",
+            "--disable-accelerated-2d-canvas",
+            "--disable-accelerated-video-decode",
+            "--disable-background-networking",
+            "--disable-default-apps",
+            "--disable-extensions",
+            "--disable-sync",
+            "--disable-translate",
+            "--hide-scrollbars",
+            "--mute-audio",
+            "--no-first-run",
+            "--safebrowsing-disable-auto-update",
+            "--disable-ipc-flooding-protection",
+            "--disable-logging",
+            "--disable-permissions-api",
+            "--disable-notifications",
+        ]
+
+        # 如果支持browser_flags参数，则直接传递
+        if init_signature and "browser_flags" in init_signature.parameters:
+            hti_kwargs["browser_flags"] = browser_flags
+
         hti = Html2Image(**hti_kwargs)
 
         # 在无头服务器环境中彻底禁用所有图形相关功能
         browser = getattr(hti, "browser", None)
-        if browser and hasattr(browser, "flags") and disable_gpu is True:
+        if browser and hasattr(browser, "flags"):
             try:
                 flags = browser.flags
                 if flags is None:
@@ -247,20 +406,7 @@ def render_markdown_to_image_bytes(
                     flags = list(flags)
 
                 # 添加全面的禁用标志
-                disable_flags = [
-                    "--disable-gpu",
-                    "--disable-gpu-sandbox",
-                    "--disable-software-rasterizer",
-                    "--disable-dev-shm-usage",
-                    "--no-sandbox",
-                    "--disable-web-security",
-                    "--disable-features=VizDisplayCompositor",
-                    "--disable-background-timer-throttling",
-                    "--disable-backgrounding-occluded-windows",
-                    "--disable-renderer-backgrounding",
-                ]
-
-                for flag in disable_flags:
+                for flag in browser_flags:
                     if flag not in flags:
                         flags.append(flag)
 
@@ -354,6 +500,22 @@ def render_markdown_to_image_bytes(
             image_bytes = buffer.getvalue()
 
         return image_bytes
+
+    except Exception as e:
+        # 提供更详细的错误信息
+        error_msg = str(e)
+        if not error_msg:
+            if "SSL" in str(type(e)) or "certificate" in str(type(e)).lower():
+                error_msg = "SSL证书验证失败，可能是由于HTTPS图片链接导致的"
+            else:
+                error_msg = f"渲染失败: {type(e).__name__}"
+
+        logger.error(f"Markdown渲染图片失败: {error_msg}")
+        logger.error(f"异常类型: {type(e).__name__}")
+        logger.error(f"异常详情: {e!r}")
+
+        # 重新抛出异常，确保错误信息能够正确传递
+        raise RuntimeError(error_msg) from e
 
     finally:
         # 清理临时文件
