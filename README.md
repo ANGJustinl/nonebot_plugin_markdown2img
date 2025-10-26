@@ -98,9 +98,9 @@ base64_image = render_markdown_to_base64(markdown_text)
 
 | 配置项 | 必填 | 默认值 | 说明 |
 |:-----:|:----:|:----:|:----:|
-| font_path | 否 | 无 | 字体文件路径 |
-| disable_gpu | 否 | True | 是否禁用GPU |
-| disable_linkify | 否 | True | 是否禁用Linkify |
+| markdown2img_font_path | 否 | 无 | 字体文件路径 |
+| markdown2img_disable_gpu | 否 | True | 是否禁用GPU |
+| markdown2img_disable_linkify | 否 | True | 是否禁用Linkify |
 
 ## 🎉 使用
 ### 指令表
