@@ -22,11 +22,9 @@ try:
 except Exception:
 
     class Config:
-        font_path: str | None = None
-        disable_gpu: bool | None = True
-        disable_linkify: bool | None = True
-        browser: str | None = "chrome"
-        browser_executable: str | None = None
+        markdown2img_font_path: str | None = None
+        markdown2img_disable_gpu: bool | None = True
+        markdown2img_disable_linkify: bool | None = True
         pass
 
     plugin_config = Config()
@@ -35,9 +33,9 @@ except Exception:
 TEMP_DIR = Path(tempfile.gettempdir()) / "markdown_renderer"
 TEMP_DIR.mkdir(exist_ok=True)
 
-DEFAULT_FONT_PATH = plugin_config.font_path
-disable_gpu = plugin_config.disable_gpu
-disable_linkify = plugin_config.disable_linkify
+DEFAULT_FONT_PATH = plugin_config.markdown2img_font_path
+disable_gpu = plugin_config.markdown2img_disable_gpu
+disable_linkify = plugin_config.markdown2img_disable_linkify
 
 if disable_gpu is True:
     logger.warning("Markdown2Img: GPU 加速已禁用以提高兼容性。")
@@ -221,8 +219,6 @@ def render_markdown_to_image_bytes(
         # 2. 初始化 html2image
         hti_kwargs = {
             "output_path": str(TEMP_DIR),
-            "browser": plugin_config.browser,
-            "browser_executable": plugin_config.browser_executable,
         }
         post_scale_factor = 1.0
 
