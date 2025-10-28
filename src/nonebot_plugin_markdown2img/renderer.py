@@ -530,6 +530,7 @@ def render_markdown_to_base64(
     渲染 Markdown 并返回 base64 格式，便于直接发送图片消息。
     """
     byte_data = render_markdown_to_image_bytes(markdown_text, font_path, canvas_width, zoom)
+    clean_up()
     return "base64://" + base64.b64encode(byte_data).decode("utf-8")
 
 
